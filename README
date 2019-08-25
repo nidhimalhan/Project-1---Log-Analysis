@@ -1,0 +1,64 @@
+## PROJECT 1 - Log Analysis
+
+In this project we are building a internal reporting tool for newspaper website that will use information from database to find out
+what kind of articles readers likes to read and this can help newspaper company to make decisions in future.
+
+## Tools & Data Required:
+
+1. This project makes use of the same Linux-based virtual machine (VM) and python codes that connect to Database API With postgresql
+database using psycopg2 module.
+2. Newspaper website's data: this is given in the project in Prepare the software and data tab.
+
+The database includes three tables:
+
+The authors table includes information about the authors of articles.
+The articles table includes the articles themselves.
+The log table includes one entry for each time a user has accessed the site.
+
+## What do we want to achieve from this project?
+1. What are the most popular three articles of all time?
+2. Who are the most popular article authors of all time?
+3. On which days did more than 1% of requests lead to errors?
+
+## Steps:
+
+1. Download Git bash terminal for Windows - link - https://git-scm.com/downloads
+2. Download Vagrant machine and connect to Virtual box. This will give us the PostgreSQL database and
+support software needed for this project. If you have used an older version of this VM,
+you may need to install it into a new directory.
+3. Download database file given the project and save in the vagrant folder and  this is very important step.
+4. In gitbash cd into vagrant Directory and bring the virtual machine back online (with vagrant up) and
+then log into it with vagrant ssh.
+5. Once you are connected to the database , you need to load the newsdata.
+6. Now, first Cd into vagrant again and run  psql -d news -f newsdata.sql in command line.
+7. Create views by writing the queries in the command line which is connected to news database.
+8. Create python file with all the code and save the file in vagrant folder.
+9. Come out of news database.
+10. Run the command python logsanalysis.py
+
+
+##Views created:
+
+For Question 3: On which days did more than 1% of requests lead to errors?
+
+Total_Errors -
+
+Create View Total_Errors as select date(time) as date, count(status) as errors
+from log where status = '404 NOT FOUND'
+group by date;
+
+Total_Requests -
+
+Create view Total_Requests as select date(time) as date, count(status) as ok_status
+from log where status = '200 OK'
+group by date;
+
+Error_Percentage - select the errors for the day divided by the total number of requests
+multiplied by 100 to get the percentage.
+
+Create view Error_Percentage as select Total_Errors.date,
+cast(float8 (sum(Total_Errors.errors)/(sum(Total_Errors.errors) + sum(Total_Requests.ok_status)))*100 as numeric)
+as all_errors
+from Total_Errors full join Total_Requests on Total_Errors.date = Total_Requests.date
+group by Total_Errors.date
+order by all_errors desc;
